@@ -21,6 +21,9 @@
 @property (nonatomic, strong) NSData* groupId;
 
 -(instancetype)initWithTitle:(NSString*)title memberIds:(NSMutableArray*)memberIds image:(UIImage*)image groupId:(NSData *)groupId associatedAttachmentId:(NSString*)attachmentId;
+
+- (instancetype)initWithGroupContent:(PushMessageContentGroupContext*)group;
+
 - (BOOL)isEqual:(id)other;
 - (BOOL)isEqualToGroupModel:(TSGroupModel *)model;
 - (NSString*) getInfoStringAboutUpdateTo:(TSGroupModel*)model;

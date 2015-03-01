@@ -7,10 +7,18 @@
 //
 
 #import "TSGroupModel.h"
+#import "IncomingPushMessageSignal.pb.h"
 
 NSString * const TSAttachementGroupAvatarFileRelationshipEdge = @"TSAttachementGroupAvatarFileEdge";
 
 @implementation TSGroupModel
+
+
+- (instancetype)initWithGroupContent:(PushMessageContentGroupContext*)group{
+    
+    
+    
+}
 
 -(instancetype)initWithTitle:(NSString*)title memberIds:(NSMutableArray*)memberIds image:(UIImage*)image groupId:(NSData *)groupId associatedAttachmentId:(NSString*)attachmentId {
     _groupName                  = title;

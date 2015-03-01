@@ -23,6 +23,9 @@
     return self;
 }
 
++ (instancetype)threadWithGroupId:(NSData*)groupId transaction:(YapDatabaseReadTransaction*)transaction {
+    return [self fetchObjectWithUniqueID:[self threadIdFromGroupId:groupId] transaction:transaction];
+}
 
 + (instancetype)threadWithGroupModel:(TSGroupModel *)groupModel transaction:(YapDatabaseReadTransaction*)transaction {
    return  [self fetchObjectWithUniqueID:[self threadIdFromGroupId:groupModel.groupId] transaction:transaction];
