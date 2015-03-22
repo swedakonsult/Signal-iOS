@@ -238,7 +238,13 @@ static NSString * keychainDBPassAccount    = @"TSDatabasePass";
 
 - (void)deleteThreadsAndMessages {
     [self.dbConnection readWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-        [transaction removeAllObjectsInCollection:[TSThread collection]];
+        NSArray *threads = [transaction allKeysInCollection:[TSThread collection]];
+        
+        for (NSString *threadId in threads){
+            TSThread *thread = [TSThread fetchObjectWithUniqueID:threadId transaction:transaction];
+            [thread removeWithTransaction:transaction];
+        }
+        
         [transaction removeAllObjectsInCollection:[TSRecipient collection]];
         [transaction removeAllObjectsInCollection:[TSInteraction collection]];
         [transaction removeAllObjectsInCollection:[TSAttachment collection]];

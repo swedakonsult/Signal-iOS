@@ -9,6 +9,10 @@
 #import "TSGroupThread.h"
 #import "TSRecipient.h"
 #import "NSData+Base64.h"
+#import "NSDate+millisecondTimeStamp.h"
+
+#import "TSOutgoingMessage.h"
+#import "TSMessagesManager+sendMessages.h"
 
 @implementation TSGroupThread
 
@@ -69,6 +73,12 @@
         [recipients addObject:recipient];
     }
     return recipients;
+}
+
+- (void)removeWithTransaction:(YapDatabaseReadWriteTransaction *)transaction{
+    TSOutgoingMessage *message = [[TSOutgoingMessage alloc] initWithTimestamp:[NSDate ows_millisecondTimeStamp] inThread:self messageBody:@"" attachments:[[NSMutableArray alloc] init]];
+    message.groupMetaMessage = TSGroupMessageQuit;
+    [[TSMessagesManager sharedManager] sendMessage:message inThread:self];
 }
 
 @end

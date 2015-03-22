@@ -57,8 +57,9 @@ dispatch_queue_t sendingQueue() {
 }
 
 - (void)sendMessage:(TSOutgoingMessage*)message inThread:(TSThread*)thread{
-    [Environment.preferences setHasSentAMessage:YES];
     dispatch_async(sendingQueue(), ^{
+        [Environment.preferences setHasSentAMessage:YES];
+        
         if ([thread isKindOfClass:[TSGroupThread class]]) {
             TSGroupThread* groupThread = (TSGroupThread*)thread;
             [self saveGroupMessage:message inThread:thread];
