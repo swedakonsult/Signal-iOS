@@ -19,7 +19,7 @@
 
 +(void) routeAllAudioToExternalSpeaker {
     AVAudioSession* session = AVAudioSession.sharedInstance;
-    [session setCategory:DEFAULT_CATAGORY withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker error:nil];
+    [session setCategory:DEFAULT_CATAGORY withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker|AVAudioSessionCategoryOptionAllowBluetooth error:nil];
 }
 
 +(BOOL) isOutputRoutedToSpeaker{
