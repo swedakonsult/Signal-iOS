@@ -54,6 +54,13 @@
     return lnString?num:nil;
 }
 
++ (PhoneNumber*)localNumberWithTransaction:(YapDatabaseReadTransaction*)transaction {
+    NSString *lnString = [transaction objectForKey:LOCAL_NUMBER_KEY inCollection:SignalKeyingCollection];
+    checkOperation(lnString != nil );
+    PhoneNumber *num = [PhoneNumber tryParsePhoneNumberFromE164:lnString];
+    return lnString?num:nil;
+}
+
 +(Zid *)zid{
     NSData *data = [self dataForKey:ZID_KEY];
     if (data.length != ZID_LENGTH) {

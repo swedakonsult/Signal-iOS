@@ -9,6 +9,11 @@
 #import "TSGroupThread.h"
 #import "TSRecipient.h"
 #import "NSData+Base64.h"
+#import "NSDate+millisecondTimeStamp.h"
+
+#import "SignalKeyingStorage.h"
+#import "TSOutgoingMessage.h"
+#import "TSMessagesManager+sendMessages.h"
 
 @implementation TSGroupThread
 
@@ -69,6 +74,24 @@
         [recipients addObject:recipient];
     }
     return recipients;
+}
+
+- (BOOL)hasLeftWithTransaction:(YapDatabaseReadTransaction*)transaction {
+    if ([self.groupModel.groupMemberIds containsObject:[[SignalKeyingStorage localNumberWithTransaction:transaction] toE164]]) {
+        return NO;
+    }
+    
+    return YES;
+}
+
+- (void)removeWithTransaction:(YapDatabaseReadWriteTransaction *)transaction{
+    if (![self hasLeftWithTransaction:transaction]) {
+        TSOutgoingMessage *message = [[TSOutgoingMessage alloc] initWithTimestamp:[NSDate ows_millisecondTimeStamp] inThread:self messageBody:@"" attachments:[[NSMutableArray alloc] init]];
+        message.groupMetaMessage = TSGroupMessageQuit;
+        [[TSMessagesManager sharedManager] sendMessage:message inThread:self];
+    }
+    
+    [super removeWithTransaction:transaction];
 }
 
 @end

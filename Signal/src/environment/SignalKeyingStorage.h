@@ -19,6 +19,8 @@
 #define ZID_LENGTH 12
 #define SIGNALING_EXTRA_KEY @"Signaling Extra Key"
 
+@class YapDatabaseReadTransaction;
+
 @interface SignalKeyingStorage : NSObject
 
 +(void)generateSignaling;
@@ -27,6 +29,7 @@
 #pragma mark Registered Phone Number
 
 +(PhoneNumber*)localNumber;
++(PhoneNumber*)localNumberWithTransaction:(YapDatabaseReadTransaction*)transaction;
 +(void)setLocalNumberTo:(PhoneNumber*)localNumber;
 
 #pragma mark Signaling Key
