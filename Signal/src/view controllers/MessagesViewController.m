@@ -1621,8 +1621,9 @@ typedef enum : NSUInteger {
     self.inputToolbar.contentView.rightBarButtonItem.hidden = YES;
     [self.inputToolbar.contentView addSubview:_recordButton];
     _waveformInComposeWindow = NO;
-    
+
     [[SignalCacheManager sharedInstance] cancelAudioRecording];
+    _composeWaveformCurrentTime = 0;
 }
 
 -(void) microphone:(EZMicrophone *)microphone
