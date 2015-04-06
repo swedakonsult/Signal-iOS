@@ -2,6 +2,7 @@
 #import "CryptoTools.h"
 #import "Constraints.h"
 #import "PhoneNumber.h"
+#import "SignalCacheManager.h"
 #import "Util.h"
 
 #import "NotificationManifest.h"
@@ -28,13 +29,11 @@
 #define HAS_ARCHIVED_A_MESSAGE_KEY @"User archived a message"
 #define kSignalVersionKey @"SignalUpdateVersionKey"
 
-#define BloomFilterCacheName     @"bloomfilter"
-
 @implementation PropertyListPreferences (PropertyUtil)
 
 -(PhoneNumberDirectoryFilter*) tryGetSavedPhoneNumberDirectory {
     NSUInteger hashCount = [[self tryGetValueForKey:PHONE_DIRECTORY_BLOOM_FILTER_HASH_COUNT_KEY] unsignedIntegerValue];
-    NSData* data = [self tryRetreiveBloomFilter];
+    NSData* data = [[SignalCacheManager sharedInstance] tryRetrieveBloomFilter];
     NSDate* expiration = [self tryGetValueForKey:PHONE_DIRECTORY_EXPIRATION];
     if (hashCount == 0 || data.length == 0 || expiration == nil) return nil;
     BloomFilter* bloomFilter = [BloomFilter bloomFilterWithHashCount:hashCount andData:data];
@@ -42,7 +41,7 @@
                                                                andExpirationDate:expiration];
 }
 -(void) setSavedPhoneNumberDirectory:(PhoneNumberDirectoryFilter*)phoneNumberDirectoryFilter {
-    [self storeBloomfilter:nil];
+    [[SignalCacheManager sharedInstance] storeBloomfilter:nil];
     [self setValueForKey:PHONE_DIRECTORY_BLOOM_FILTER_HASH_COUNT_KEY toValue:nil];
     [self setValueForKey:PHONE_DIRECTORY_EXPIRATION toValue:nil];
     if (phoneNumberDirectoryFilter == nil) return;
@@ -50,7 +49,7 @@
     NSData* data = [[phoneNumberDirectoryFilter bloomFilter] data];
     NSNumber* hashCount = @([[phoneNumberDirectoryFilter bloomFilter] hashCount]);
     NSDate* expiry = phoneNumberDirectoryFilter.getExpirationDate;
-    [self storeBloomfilter:data];
+    [[SignalCacheManager sharedInstance] storeBloomfilter:data];
     [self setValueForKey:PHONE_DIRECTORY_BLOOM_FILTER_HASH_COUNT_KEY toValue:hashCount];
     [self setValueForKey:PHONE_DIRECTORY_EXPIRATION toValue:expiry];
     [self sendDirectoryUpdateNotification];
@@ -212,54 +211,6 @@
     [NSUserDefaults.standardUserDefaults setObject:currentVersion forKey:kSignalVersionKey];
     [NSUserDefaults.standardUserDefaults synchronize];
     return currentVersion;
-}
-
-#pragma mark Bloom filter
-
-- (NSData*)tryRetreiveBloomFilter {
-    return [NSData dataWithContentsOfFile:[self bloomfilterPath]];
-}
-
-- (void)storeBloomfilter:(NSData*)bloomFilterData {
-    if (!bloomFilterData) {
-        NSFileManager *fileManager = [NSFileManager defaultManager];
-        NSError       *error;
-        
-        if ([fileManager fileExistsAtPath:[self bloomfilterPath]]) {
-            [fileManager removeItemAtPath:[self bloomfilterPath] error:&error];
-        }
-        
-        if (error) {
-            DDLogError(@"Failed to remove bloomfilter with error: %@", error);
-        }
-        
-        return;
-    }
-    
-    NSError *error;
-    [bloomFilterData writeToFile:[self bloomfilterPath] options:NSDataWritingAtomic error:&error];
-    if (error) {
-        DDLogError(@"Failed to store bloomfilter with error: %@", error);
-    }
-}
-
-- (NSString*)bloomfilterPath {
-    NSFileManager *fm         = [NSFileManager defaultManager];
-    NSArray  *cachesDir       = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-    NSString *bloomFilterPath = [cachesDir  objectAtIndex:0];
-    NSError  *error;
-    
-    if (![fm fileExistsAtPath:bloomFilterPath]) {
-        [fm createDirectoryAtPath:bloomFilterPath withIntermediateDirectories:YES attributes:@{} error:&error];
-    }
-
-    if (error) {
-        DDLogError(@"Failed to create caches directory with error: %@", error.description);
-    }
-    
-    bloomFilterPath = [bloomFilterPath stringByAppendingPathComponent:BloomFilterCacheName];
-    
-    return bloomFilterPath;
 }
 
 @end

@@ -32,12 +32,67 @@
 
 @implementation VersionMigrations
 
+#pragma mark Utility methods
+
++ (void)performUpdateCheck{
+    NSString *previousVersion     = Environment.preferences.lastRanVersion;
+    NSString *currentVersion      = [Environment.preferences setAndGetCurrentVersion];
+    BOOL     isCurrentlyMigrating = [VersionMigrations isMigratingTo2Dot0];
+    
+    if (!previousVersion) {
+        DDLogError(@"No previous version found. Possibly first launch since install.");
+        return;
+    }
+    
+    if(([self isVersion:previousVersion atLeast:@"1.0.2" andLessThan:@"2.0"]) || isCurrentlyMigrating) {
+        [VersionMigrations migrateFrom1Dot0Dot2ToVersion2Dot0];
+    }
+    
+    if(([self isVersion:previousVersion atLeast:@"2.0.0" andLessThan:@"2.0.18"])) {
+        [VersionMigrations migrateBloomFilter];
+    }
+    
+    if ([self isVersion:previousVersion atLeast:@"2.0.0" andLessThan:@"2.0.19"]) {
+#warning TODO: Delete previously stored video files in cache.
+#warning TODO: Migrate database location.
+    }
+}
+
++ (BOOL)isMigrating{
+    return [self isMigratingTo2Dot0];
+}
+
++ (BOOL) isVersion:(NSString *)thisVersionString atLeast:(NSString *)openLowerBoundVersionString andLessThan:(NSString *)closedUpperBoundVersionString {
+    return [self isVersion:thisVersionString atLeast:openLowerBoundVersionString] && [self isVersion:thisVersionString lessThan:closedUpperBoundVersionString];
+}
+
++ (BOOL) isVersion:(NSString *)thisVersionString atLeast:(NSString *)thatVersionString {
+    return [thisVersionString compare:thatVersionString options:NSNumericSearch] != NSOrderedAscending;
+}
+
++ (BOOL) isVersion:(NSString *)thisVersionString lessThan:(NSString *)thatVersionString {
+    return [thisVersionString compare:thatVersionString options:NSNumericSearch] == NSOrderedAscending;
+}
+
++ (void)clearUserDefaults{
+    NSString *appDomain = [[NSBundle mainBundle] bundleIdentifier];
+    [[NSUserDefaults standardUserDefaults] removePersistentDomainForName:appDomain];
+    
+    [Environment.preferences setAndGetCurrentVersion];
+    [[NSUserDefaults standardUserDefaults] setObject:@YES forKey:IS_MIGRATING_FROM_1DOT0_TO_LARGER_KEY];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+#pragma mark 2.0.1
+
 + (void)migrateBloomFilter {
     // The bloom filter had to be moved to the cache folder after rejection of the 2.0.1
     NSString *oldBloomKey = @"Directory Bloom Data";
     [[Environment preferences] setValueForKey:oldBloomKey toValue:nil];
     return;
 }
+
+#pragma mark 2.0
 
 + (void)migrateFrom1Dot0Dot2ToVersion2Dot0 {
     
@@ -94,7 +149,6 @@
     }];
 }
 
-#pragma mark helper methods
 + (void) migrateRecentCallsToVersion2Dot0 {
     NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
     NSData *encodedData = [defaults objectForKey:RECENT_CALLS_DEFAULT_KEY];
@@ -156,15 +210,6 @@
     [UICKeyChainStore removeItemForKey:SIGNALING_CIPHER_KEY];
     [UICKeyChainStore removeItemForKey:ZID_KEY];
     [UICKeyChainStore removeItemForKey:SIGNALING_EXTRA_KEY];
-}
-
-+ (void)clearUserDefaults{
-    NSString *appDomain = [[NSBundle mainBundle] bundleIdentifier];
-    [[NSUserDefaults standardUserDefaults] removePersistentDomainForName:appDomain];
-    
-    [Environment.preferences setAndGetCurrentVersion];
-    [[NSUserDefaults standardUserDefaults] setObject:@YES forKey:IS_MIGRATING_FROM_1DOT0_TO_LARGER_KEY];
-    [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 + (BOOL)isMigratingTo2Dot0{

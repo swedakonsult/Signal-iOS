@@ -30,6 +30,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import <CoreMedia/CoreMedia.h>
 
+#import "SignalCacheManager.h"
 #import "TSContactThread.h"
 #import "TSGroupThread.h"
 
@@ -1211,27 +1212,14 @@ typedef enum : NSUInteger {
 }
 
 -(void)sendQualityAdjustedAttachment:(NSURL*)movieURL {
-    // TODO: should support anything that is in the videos directory
     AVAsset *video = [AVAsset assetWithURL:movieURL];
     AVAssetExportSession *exportSession = [AVAssetExportSession exportSessionWithAsset:video presetName:AVAssetExportPresetMediumQuality];
     exportSession.shouldOptimizeForNetworkUse = YES;
     exportSession.outputFileType = AVFileTypeMPEG4;
-    
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *basePath = ([paths count] > 0) ? [paths objectAtIndex:0] : nil;
-    basePath = [basePath stringByAppendingPathComponent:@"videos"];
-    if (![[NSFileManager defaultManager] fileExistsAtPath:basePath]) {
-        [[NSFileManager defaultManager] createDirectoryAtPath:basePath withIntermediateDirectories:YES attributes:nil error:nil];
-    }
-    
-    NSURL *compressedVideoUrl = [NSURL fileURLWithPath:basePath];
-    double currentTime = [[NSDate date] timeIntervalSince1970];
-    NSString *strImageName = [NSString stringWithFormat:@"%f",currentTime];
-    compressedVideoUrl = [compressedVideoUrl URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.mp4",strImageName]];
-    
+    NSURL *compressedVideoUrl = [[SignalCacheManager sharedInstance] tempVideoStorageURL];
     exportSession.outputURL = compressedVideoUrl;
     [exportSession exportAsynchronouslyWithCompletionHandler:^{
-        [self sendMessageAttachment:[NSData dataWithContentsOfURL:compressedVideoUrl] ofType:@"video/mp4"];
+        [self sendMessageAttachment:[[SignalCacheManager sharedInstance] retrieveAndClearVideoTemp] ofType:@"video/mp4"];
     }];
 }
 
@@ -1451,37 +1439,7 @@ typedef enum : NSUInteger {
     return [manager adapterForInteractionId:interaction.uniqueId];
 }
 
-
-#pragma mark group action view
-
-
 #pragma mark - Audio
-
-- (void)deleteAudioTempFile {
-    NSFileManager *fm = [NSFileManager defaultManager];
-    NSError  *error;
-    [fm removeItemAtPath:[self audioFileTempPath] error:&error];
-    if (error) {
-        DDLogError(@"Failed to delete the file at temp path: %@", error.description);
-    }
-}
-
-- (NSString*)audioFileTempPath {
-    NSFileManager *fm         = [NSFileManager defaultManager];
-    NSArray  *cachesDirs      = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-    NSString *cachesPath      = [cachesDirs  objectAtIndex:0];
-    NSError  *error;
-    
-    if (![fm fileExistsAtPath:cachesPath]) {
-        [fm createDirectoryAtPath:cachesPath withIntermediateDirectories:YES attributes:@{} error:&error];
-    }
-    
-    if (error) {
-        DDLogError(@"Failed to create caches directory with error: %@", error.description);
-    }
-    
-    return [cachesPath stringByAppendingPathComponent:@"tempRecording.mp4"];
-}
 
 - (void)recording:(UILongPressGestureRecognizer*)recordRecognizer {
     if (recordRecognizer.state == UIGestureRecognizerStateBegan) {
@@ -1521,13 +1479,13 @@ typedef enum : NSUInteger {
         [_recorderContainer addSubview:_audioRecorderPlot];
         [self.inputToolbar.contentView addSubview:_recorderContainer];
         
-        NSString *audioFile = [self audioFileTempPath];
-        
         [EZMicrophone sharedMicrophone].microphoneDelegate = self;
         [_audioPlayer stop];
         [[EZMicrophone sharedMicrophone] startFetchingAudio];
         
-        self.recorder = [EZRecorder recorderWithDestinationURL:[NSURL fileURLWithPath:audioFile] sourceFormat:[EZMicrophone sharedMicrophone].audioStreamBasicDescription destinationFileType:EZRecorderFileTypeM4A];
+        self.recorder = [EZRecorder recorderWithDestinationURL:[[SignalCacheManager sharedInstance] audioRecordPath]
+                                                  sourceFormat:[EZMicrophone sharedMicrophone].audioStreamBasicDescription
+                                           destinationFileType:EZRecorderFileTypeM4A];
         
         CGRect inputRect = self.inputToolbar.contentView.frame;
         _recordCircle = [[UIButton alloc] initWithFrame:CGRectMake(inputRect.size.width - (_recordCircle.frame.size.width/2)-1, inputRect.size.height/2, 1, 1)];
@@ -1585,9 +1543,9 @@ typedef enum : NSUInteger {
     [_recordCancelButton addTarget:self action:@selector(cancelWaveform:) forControlEvents:UIControlEventTouchUpInside];
     [self.inputToolbar.contentView addSubview:_recordCancelButton];
     [_recordButton removeFromSuperview];
-    
-    _waveformAudioFile = [NSURL fileURLWithPath:[self audioFileTempPath]];
+    _waveformAudioFile = [[SignalCacheManager sharedInstance] audioRecordPath];
     [self.recorder closeAudioFile];
+    
     EZAudioFile *ezAudioFile = [EZAudioFile audioFileWithURL:_waveformAudioFile];
     [ezAudioFile getWaveformDataWithCompletionBlock:^(float *waveformData, UInt32 length) {
         [_audioRecorderPlot generateWaveform:waveformData length:(int)length];
@@ -1663,7 +1621,8 @@ typedef enum : NSUInteger {
     self.inputToolbar.contentView.rightBarButtonItem.hidden = YES;
     [self.inputToolbar.contentView addSubview:_recordButton];
     _waveformInComposeWindow = NO;
-    [self deleteAudioTempFile];
+    
+    [[SignalCacheManager sharedInstance] cancelAudioRecording];
 }
 
 -(void) microphone:(EZMicrophone *)microphone
@@ -1725,7 +1684,7 @@ withNumberOfChannels:(UInt32)numberOfChannels {
 }
 
 - (void)sendAudioFile {
-    [self sendAudioMessageAttachment:[NSData dataWithContentsOfURL:_waveformAudioFile]];
+    [self sendAudioMessageAttachment:[[SignalCacheManager sharedInstance] retrieveAudioTempAndCancel]];
     [self cancelWaveform:nil];
 }
 

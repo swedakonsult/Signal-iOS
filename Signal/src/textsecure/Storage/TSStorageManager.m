@@ -14,6 +14,7 @@
 #import "DebugLogger.h"
 #import "NSData+Base64.h"
 
+#import "SignalCacheManager.h"
 #import "TSThread.h"
 #import "TSInteraction.h"
 #import "TSRecipient.h"
@@ -80,17 +81,22 @@ static NSString * keychainDBPassAccount    = @"TSDatabasePass";
 
 - (void)protectSignalFiles{
     [self protectFolderAtPath:[TSAttachmentStream attachmentsFolder]];
+    [self protectFolderAtPath:[CacheObjectPath cacheFolderPath]];
     [self protectFolderAtPath:[self dbPath]];
     [self protectFolderAtPath:[[DebugLogger sharedInstance] logsDirectory]];
 }
 
 - (void)protectFolderAtPath:(NSString*)path {
     NSError *error;
-    NSDictionary *attrs = @{NSFileProtectionKey: NSFileProtectionCompleteUntilFirstUserAuthentication,
-                   NSURLIsExcludedFromBackupKey:@YES};
     
+    NSDictionary *fileProtection = @{NSFileProtectionKey: NSFileProtectionCompleteUntilFirstUserAuthentication};
+    [[NSFileManager defaultManager] setAttributes:fileProtection ofItemAtPath:path error:&error];
     
-    BOOL success = [NSFileManager.defaultManager setAttributes:attrs ofItemAtPath:path error:&error];
+    NSDictionary *resourcesAttrs = @{NSURLIsExcludedFromBackupKey: @YES};
+    
+    NSURL *ressourceURL = [NSURL fileURLWithPath:path];
+    BOOL success = [ressourceURL setResourceValues:resourcesAttrs error:&error];
+    
     
     if (error || !success) {
         DDLogError(@"Error while removing files from backup: %@", error.description);
@@ -117,7 +123,7 @@ static NSString * keychainDBPassAccount    = @"TSDatabasePass";
     
     NSFileManager* fileManager = [NSFileManager defaultManager];
 #if TARGET_OS_IPHONE
-    NSURL *fileURL = [[fileManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
+    NSURL *fileURL = [[fileManager URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask] lastObject];
     NSString *path = [fileURL path];
     databasePath = [path stringByAppendingFormat:@"/%@", databaseName];
 #elif TARGET_OS_MAC

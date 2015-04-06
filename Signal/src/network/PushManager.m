@@ -74,7 +74,7 @@
                 [self.registerWithServerFutureSource trySetFailure:[NSError errorWithDomain:pushManagerDomain code:500 userInfo:nil]];
             }
         } else{
-            [self.registerWithServerFutureSource trySetFailure:task.response];
+            [self.registerWithServerFutureSource trySetFailure:[NSError errorWithDomain:pushManagerDomain code:501 userInfo:@{@"request-content": task.response.debugDescription}]];
         }
         
     } failure:^(NSURLSessionDataTask *task, NSError *error) {

@@ -404,6 +404,7 @@
 		B6C6AE561A305ED1006BAF8F /* textsecure.cer in Resources */ = {isa = PBXBuildFile; fileRef = B6C6AE541A305ED1006BAF8F /* textsecure.cer */; };
 		B6C93C4E199567AD00EDF894 /* DebugLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = B6C93C4D199567AD00EDF894 /* DebugLogger.m */; };
 		B6E314C91A38FAAF00A41AFB /* TSFingerprintGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = B6E314C81A38FAAF00A41AFB /* TSFingerprintGenerator.m */; };
+		B6E766EE1AD09A0900CD8AFF /* SignalCacheManager.m in Sources */ = {isa = PBXBuildFile; fileRef = B6E766ED1AD09A0900CD8AFF /* SignalCacheManager.m */; };
 		B6F509971AA53F760068F56A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = B6F509951AA53F760068F56A /* Localizable.strings */; };
 		B6FAAAE81A41BC6C007FEC1D /* TSAttachmentPointer.m in Sources */ = {isa = PBXBuildFile; fileRef = B6FAAAE71A41BC6C007FEC1D /* TSAttachmentPointer.m */; };
 		B6FAAAEE1A41C918007FEC1D /* TSAttachmentStream.m in Sources */ = {isa = PBXBuildFile; fileRef = B6FAAAED1A41C918007FEC1D /* TSAttachmentStream.m */; };
@@ -1086,6 +1087,8 @@
 		B6C93C4D199567AD00EDF894 /* DebugLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DebugLogger.m; sourceTree = "<group>"; };
 		B6E314C71A38FAAF00A41AFB /* TSFingerprintGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSFingerprintGenerator.h; sourceTree = "<group>"; };
 		B6E314C81A38FAAF00A41AFB /* TSFingerprintGenerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TSFingerprintGenerator.m; sourceTree = "<group>"; };
+		B6E766EC1AD09A0900CD8AFF /* SignalCacheManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SignalCacheManager.h; sourceTree = "<group>"; };
+		B6E766ED1AD09A0900CD8AFF /* SignalCacheManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SignalCacheManager.m; sourceTree = "<group>"; };
 		B6E80FA61AA5453C0000253B /* et_EE */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = et_EE; path = translations/et_EE.lproj/Localizable.strings; sourceTree = "<group>"; };
 		B6F509961AA53F760068F56A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = translations/en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		B6FAAAE61A41BC6C007FEC1D /* TSAttachmentPointer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TSAttachmentPointer.h; path = Attachements/TSAttachmentPointer.h; sourceTree = "<group>"; };
@@ -1420,6 +1423,8 @@
 				76EB041918170B33006006FC /* PropertyListPreferences.m */,
 				76EB041A18170B33006006FC /* Release.h */,
 				76EB041B18170B33006006FC /* Release.m */,
+				B6E766EC1AD09A0900CD8AFF /* SignalCacheManager.h */,
+				B6E766ED1AD09A0900CD8AFF /* SignalCacheManager.m */,
 				B6B1013A196D213F007E3930 /* SignalKeyingStorage.h */,
 				B6B1013B196D213F007E3930 /* SignalKeyingStorage.m */,
 				B60C16631988999D00E97A6C /* VersionMigrations.h */,
@@ -3117,6 +3122,7 @@
 				E197B60F18BBEC1A00F073E5 /* EncodedAudioFrame.m in Sources */,
 				B6B0966C1A1D25ED008BFAA6 /* TSCall.m in Sources */,
 				76EB061818170B33006006FC /* AnonymousValueLogger.m in Sources */,
+				B6E766EE1AD09A0900CD8AFF /* SignalCacheManager.m in Sources */,
 				A59E6D721A79E5D100D98E2E /* MIMETypeUtil.m in Sources */,
 				76EB05E618170B33006006FC /* CallController.m in Sources */,
 				FC31962A1A067D8F0094C78E /* MessageComposeTableViewController.m in Sources */,
